@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  postgres:
+    container_name: db-postgres
+    image: postgres:alpine
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    ports:
+      - "5432:5432"
+
+  node:
+    build: ./api
+    container_name: backend-server
+    depends_on:
+      - postgres
+    entrypoint: [ "sh", "-c", "npx prisma migrate dev --name migration-name && npm run dev" ]
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/pomodoro"
+    ports:
+      - "8000:8000"
+
+# version: "3.7"
+
+# services:
+#   postgres:
+#     image: postgres:latest
+#     environment:
+#       POSTGRES_PASSWORD: password
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     ports:
+#       - "5432:5432"
+
+#   node:
+#     build: ./api
+#     container_name: backend
+#     depends_on:
+#       - postgres
+#     ports:
+#       - "8000:8000"
+
+
+  react:
+    build: ./
+    container_name: pomodoro-frontend
+    depends_on:
+      - node
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./:/app
+      - /app/node_modules
